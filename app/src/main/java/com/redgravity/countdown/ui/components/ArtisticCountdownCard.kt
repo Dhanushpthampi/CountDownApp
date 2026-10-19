@@ -1,7 +1,8 @@
 package com.redgravity.countdown.ui.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,23 +15,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PushPin
-import androidx.compose.material.icons.outlined.PushPin
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -42,147 +40,53 @@ import com.redgravity.countdown.model.CountdownTimeRemaining
 import com.redgravity.countdown.util.TimeUtils
 
 @Composable
-fun ArtisticCountdownCard(
+fun MaterialCountdownCard(
     item: CountdownItem,
     currentTimeMillis: Long,
     onClick: () -> Unit,
-    onTogglePin: () -> Unit,
-    onShare: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val theme = item.visualTheme
     val remaining = item.calculateRemaining(currentTimeMillis)
 
-    Box(
+    ElevatedCard(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(22.dp))
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(theme.surfaceGradientStart, theme.surfaceGradientEnd)
-                )
-            )
-            .border(
-                width = 1.dp,
-                color = if (item.isPinned) theme.accentColor.copy(alpha = 0.6f) else theme.cardBorder,
-                shape = RoundedCornerShape(22.dp)
-            )
-            .clickable(onClick = onClick)
-            .padding(20.dp)
+            .clickable(onClick = onClick),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        )
     ) {
         when (item.cardStyle) {
-            CountdownCardStyle.ARCHITECTURAL -> {
-                ArchitecturalLayout(
-                    item = item,
-                    remaining = remaining,
-                    onTogglePin = onTogglePin,
-                    onShare = onShare
-                )
-            }
-            CountdownCardStyle.NEO_GLASS -> {
-                NeoGlassLayout(
-                    item = item,
-                    remaining = remaining,
-                    onTogglePin = onTogglePin,
-                    onShare = onShare
-                )
-            }
-            CountdownCardStyle.RADIAL_PROGRESS -> {
-                RadialProgressLayout(
-                    item = item,
-                    remaining = remaining,
-                    onTogglePin = onTogglePin,
-                    onShare = onShare
-                )
-            }
-            CountdownCardStyle.BOLD_NUMERIC -> {
-                BoldNumericLayout(
-                    item = item,
-                    remaining = remaining,
-                    onTogglePin = onTogglePin,
-                    onShare = onShare
-                )
-            }
+            CountdownCardStyle.STANDARD -> StandardLayout(item, remaining)
+            CountdownCardStyle.COMPACT -> CompactLayout(item, remaining)
+            CountdownCardStyle.PROGRESS_BAR -> ProgressBarLayout(item, remaining)
+            CountdownCardStyle.PROGRESS_CIRCLE -> ProgressCircleLayout(item, remaining)
         }
     }
 }
 
 @Composable
-private fun ArchitecturalLayout(
-    item: CountdownItem,
-    remaining: CountdownTimeRemaining,
-    onTogglePin: () -> Unit,
-    onShare: () -> Unit
-) {
-    val theme = item.visualTheme
-
-    Column {
-        // Top Meta Row
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+private fun StandardLayout(item: CountdownItem, remaining: CountdownTimeRemaining) {
+    Column(modifier = Modifier.padding(16.dp)) {
+        // Category chip
+        SuggestionChip(
+            onClick = {},
+            label = {
                 Text(
-                    text = "✦  ${item.category.title.uppercase()}",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.2.sp,
-                    color = theme.accentColor
-                )
-                Spacer(Modifier.width(8.dp))
-                Box(
-                    modifier = Modifier
-                        .size(3.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF67728A))
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = TimeUtils.formatRelativeStatus(item.targetEpochMillis),
-                    fontSize = 11.sp,
-                    color = Color(0xFF9FA6B6)
+                    text = item.category.title,
+                    style = MaterialTheme.typography.labelSmall
                 )
             }
+        )
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(
-                    onClick = onTogglePin,
-                    modifier = Modifier.size(28.dp)
-                ) {
-                    Icon(
-                        imageVector = if (item.isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
-                        contentDescription = "Pin",
-                        tint = if (item.isPinned) theme.accentColor else Color(0xFF67728A),
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
+        Spacer(Modifier.height(8.dp))
 
-                Spacer(Modifier.width(4.dp))
-
-                IconButton(
-                    onClick = onShare,
-                    modifier = Modifier.size(28.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Share,
-                        contentDescription = "Share",
-                        tint = Color(0xFF8E95A5),
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-        }
-
-        Spacer(Modifier.height(10.dp))
-
-        // Title & Description
         Text(
             text = item.title,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = theme.textPrimary,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
@@ -192,399 +96,422 @@ private fun ArchitecturalLayout(
             Text(
                 text = item.description,
                 style = MaterialTheme.typography.bodySmall,
-                color = theme.textSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         }
 
-        Spacer(Modifier.height(14.dp))
-
-        // Hairline Divider
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(theme.cardBorder)
-        )
-
         Spacer(Modifier.height(16.dp))
 
         if (remaining.isFinished) {
-            ArrivedBanner(theme.accentColor)
+            ArrivedBadge()
         } else {
-            FullTimeUnitGrid(
-                remaining = remaining,
-                accentColor = theme.accentColor
-            )
+            // Smart time display: days + hms breakdown
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                TimeBox(
+                    value = remaining.smartValue.toString(),
+                    label = remaining.smartUnit,
+                    modifier = Modifier.weight(1f),
+                    isPrimary = true
+                )
+                if (remaining.totalYears < 1 && remaining.totalMonths < 1) {
+                    TimeBox(
+                        value = remaining.formattedHours,
+                        label = "hrs",
+                        modifier = Modifier.weight(1f)
+                    )
+                    TimeBox(
+                        value = remaining.formattedMinutes,
+                        label = "min",
+                        modifier = Modifier.weight(1f)
+                    )
+                    TimeBox(
+                        value = remaining.formattedSeconds,
+                        label = "sec",
+                        modifier = Modifier.weight(1f)
+                    )
+                } else if (remaining.totalYears >= 1) {
+                    TimeBox(
+                        value = remaining.totalMonths.toString(),
+                        label = "months total",
+                        modifier = Modifier.weight(1f)
+                    )
+                    TimeBox(
+                        value = remaining.totalDays.toString(),
+                        label = "days total",
+                        modifier = Modifier.weight(1f)
+                    )
+                } else {
+                    TimeBox(
+                        value = remaining.totalDays.toString(),
+                        label = "days total",
+                        modifier = Modifier.weight(1f)
+                    )
+                    TimeBox(
+                        value = remaining.formattedHours,
+                        label = "hrs",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
         }
 
         Spacer(Modifier.height(12.dp))
 
-        // Footer with Target Date
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Text(
+            text = TimeUtils.formatEditorialDate(item.targetEpochMillis),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun CompactLayout(item: CountdownItem, remaining: CountdownTimeRemaining) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Target: ${TimeUtils.formatEditorialDate(item.targetEpochMillis)}",
-                fontSize = 11.sp,
-                color = Color(0xFF7E889B)
+                text = item.category.title,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary
             )
+            Spacer(Modifier.height(2.dp))
             Text(
-                text = TimeUtils.formatTime(item.targetEpochMillis),
-                fontSize = 11.sp,
-                color = Color(0xFF7E889B),
-                fontFamily = FontFamily.Monospace
+                text = item.title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = TimeUtils.formatEditorialDate(item.targetEpochMillis),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Spacer(Modifier.width(16.dp))
+
+        Column(horizontalAlignment = Alignment.End) {
+            if (remaining.isFinished) {
+                Text(
+                    text = "Done",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+            } else {
+                Text(
+                    text = remaining.smartValue.toString(),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = remaining.smartUnit,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun NeoGlassLayout(
-    item: CountdownItem,
-    remaining: CountdownTimeRemaining,
-    onTogglePin: () -> Unit,
-    onShare: () -> Unit
-) {
-    val theme = item.visualTheme
+private fun ProgressBarLayout(item: CountdownItem, remaining: CountdownTimeRemaining) {
+    Column(modifier = Modifier.padding(16.dp)) {
+        SuggestionChip(onClick = {}, label = {
+            Text(text = item.category.title, style = MaterialTheme.typography.labelSmall)
+        })
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = item.title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+        Spacer(Modifier.height(12.dp))
 
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(theme.accentColor.copy(alpha = 0.15f))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-            ) {
+        if (remaining.isFinished) {
+            ArrivedBadge()
+        } else {
+            Row(verticalAlignment = Alignment.Bottom) {
                 Text(
-                    text = item.category.title.uppercase(),
-                    fontSize = 10.sp,
+                    text = remaining.smartValue.toString(),
+                    style = MaterialTheme.typography.displaySmall,
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp,
-                    color = theme.accentColor
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = remaining.smartUnit + " left",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 6.dp)
                 )
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onTogglePin, modifier = Modifier.size(28.dp)) {
-                    Icon(
-                        imageVector = if (item.isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
-                        contentDescription = "Pin",
-                        tint = if (item.isPinned) theme.accentColor else Color(0xFF67728A),
-                        modifier = Modifier.size(16.dp)
+            if (remaining.hasProgress) {
+                Spacer(Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Started",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "${(remaining.progressRatio * 100).toInt()}% elapsed",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
-                IconButton(onClick = onShare, modifier = Modifier.size(28.dp)) {
-                    Icon(
-                        imageVector = Icons.Outlined.Share,
-                        contentDescription = "Share",
-                        tint = Color(0xFF8E95A5),
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
+                Spacer(Modifier.height(4.dp))
+                LinearProgressIndicator(
+                    progress = { remaining.progressRatio },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(3.dp)),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.primaryContainer,
+                    strokeCap = StrokeCap.Round
+                )
             }
         }
 
         Spacer(Modifier.height(8.dp))
-
         Text(
-            text = item.title,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = Color.White
+            text = TimeUtils.formatEditorialDate(item.targetEpochMillis),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-
-        Spacer(Modifier.height(14.dp))
-
-        if (remaining.isFinished) {
-            ArrivedBanner(theme.accentColor)
-        } else {
-            FullTimeUnitGrid(
-                remaining = remaining,
-                accentColor = theme.accentColor,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        Spacer(Modifier.height(14.dp))
-
-        // Linear Progress bar showing journey completion
-        Column {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "${(remaining.progressRatio * 100).toInt()}% Elapsed",
-                    fontSize = 10.sp,
-                    color = Color(0xFF9FA6B6),
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = TimeUtils.formatShortDate(item.targetEpochMillis),
-                    fontSize = 10.sp,
-                    color = Color(0xFF9FA6B6)
-                )
-            }
-            Spacer(Modifier.height(4.dp))
-            LinearProgressIndicator(
-                progress = { remaining.progressRatio },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp)),
-                color = theme.accentColor,
-                trackColor = Color(0x25FFFFFF),
-                strokeCap = StrokeCap.Round
-            )
-        }
     }
 }
 
 @Composable
-private fun RadialProgressLayout(
-    item: CountdownItem,
-    remaining: CountdownTimeRemaining,
-    onTogglePin: () -> Unit,
-    onShare: () -> Unit
-) {
-    val theme = item.visualTheme
-
+private fun ProgressCircleLayout(item: CountdownItem, remaining: CountdownTimeRemaining) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Left Column: Radial Ring
-        RadialProgressRing(
-            progress = remaining.progressRatio,
-            accentColor = theme.accentColor,
-            secondaryColor = theme.secondaryAccent,
-            size = 84.dp,
-            strokeWidth = 6.dp
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = if (remaining.isFinished) "0" else remaining.days.toString(),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Monospace,
-                    color = theme.accentColor
-                )
-                Text(
-                    text = "DAYS",
-                    fontSize = 8.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.8.sp,
-                    color = Color(0xFF9FA6B6)
-                )
+        // Progress Ring
+        if (remaining.hasProgress) {
+            MaterialProgressRing(
+                progress = remaining.progressRatio,
+                size = 80.dp
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "${(remaining.progressRatio * 100).toInt()}",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "%",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 9.sp
+                    )
+                }
+            }
+        } else {
+            // No progress: show big number
+            Box(
+                modifier = Modifier.size(80.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = if (remaining.isFinished) "✓" else remaining.smartValue.toString(),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    if (!remaining.isFinished) {
+                        Text(
+                            text = remaining.smartUnit,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 9.sp
+                        )
+                    }
+                }
             }
         }
 
         Spacer(Modifier.width(16.dp))
 
-        // Right Column: Details
         Column(modifier = Modifier.weight(1f)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "✦  ${item.category.title.uppercase()}",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp,
-                    color = theme.accentColor
-                )
-
-                Row {
-                    IconButton(onClick = onTogglePin, modifier = Modifier.size(24.dp)) {
-                        Icon(
-                            imageVector = if (item.isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
-                            contentDescription = "Pin",
-                            tint = if (item.isPinned) theme.accentColor else Color(0xFF67728A),
-                            modifier = Modifier.size(15.dp)
-                        )
-                    }
-                    IconButton(onClick = onShare, modifier = Modifier.size(24.dp)) {
-                        Icon(
-                            imageVector = Icons.Outlined.Share,
-                            contentDescription = "Share",
-                            tint = Color(0xFF8E95A5),
-                            modifier = Modifier.size(15.dp)
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(4.dp))
-
             Text(
-                text = item.title,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.White,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(Modifier.height(6.dp))
-
-            if (remaining.isFinished) {
-                Text(
-                    text = "Arrived • Target Reached",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = theme.accentColor
-                )
-            } else {
-                Text(
-                    text = "${remaining.formattedHours}h ${remaining.formattedMinutes}m ${remaining.formattedSeconds}s remaining",
-                    fontSize = 12.sp,
-                    color = Color(0xFFC7CDD9),
-                    fontFamily = FontFamily.Monospace
-                )
-            }
-
-            Spacer(Modifier.height(4.dp))
-
-            Text(
-                text = "Target: ${TimeUtils.formatShortDate(item.targetEpochMillis)}",
-                fontSize = 11.sp,
-                color = Color(0xFF7E889B)
-            )
-        }
-    }
-}
-
-@Composable
-private fun BoldNumericLayout(
-    item: CountdownItem,
-    remaining: CountdownTimeRemaining,
-    onTogglePin: () -> Unit,
-    onShare: () -> Unit
-) {
-    val theme = item.visualTheme
-
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "✦  ${item.category.title.uppercase()}  •  ${TimeUtils.formatRelativeStatus(item.targetEpochMillis)}",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp,
-                color = theme.accentColor
-            )
-
-            Row {
-                IconButton(onClick = onTogglePin, modifier = Modifier.size(26.dp)) {
-                    Icon(
-                        imageVector = if (item.isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
-                        contentDescription = "Pin",
-                        tint = if (item.isPinned) theme.accentColor else Color(0xFF67728A),
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-                IconButton(onClick = onShare, modifier = Modifier.size(26.dp)) {
-                    Icon(
-                        imageVector = Icons.Outlined.Share,
-                        contentDescription = "Share",
-                        tint = Color(0xFF8E95A5),
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-        }
-
-        Spacer(Modifier.height(8.dp))
-
-        Text(
-            text = item.title,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        if (remaining.isFinished) {
-            ArrivedBanner(theme.accentColor)
-        } else {
-            Row(
-                verticalAlignment = Alignment.Bottom,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = remaining.days.toString(),
-                    fontSize = 52.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.SansSerif,
-                    color = theme.accentColor
-                )
-                Spacer(Modifier.width(10.dp))
-                Column(modifier = Modifier.padding(bottom = 8.dp)) {
-                    Text(
-                        text = "${remaining.daysLabel} LEFT",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp,
-                        color = Color.White
-                    )
-                    Text(
-                        text = "${remaining.formattedHours}H : ${remaining.formattedMinutes}M : ${remaining.formattedSeconds}S",
-                        fontSize = 12.sp,
-                        fontFamily = FontFamily.Monospace,
-                        color = Color(0xFF8E95A5)
-                    )
-                }
-            }
-        }
-
-        Spacer(Modifier.height(6.dp))
-
-        Text(
-            text = "Until ${TimeUtils.formatEditorialDate(item.targetEpochMillis)}",
-            fontSize = 11.sp,
-            color = Color(0xFF7E889B)
-        )
-    }
-}
-
-@Composable
-private fun ArrivedBanner(accentColor: Color) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(accentColor.copy(alpha = 0.15f))
-            .border(1.dp, accentColor.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
-            .padding(vertical = 12.dp, horizontal = 16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = "MOMENT ARRIVED",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 2.sp,
-                color = accentColor
+                text = item.category.title,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary
             )
             Spacer(Modifier.height(2.dp))
             Text(
-                text = "This milestone has reached its horizon.",
-                fontSize = 12.sp,
-                color = Color(0xFFC7CDD9)
+                text = item.title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(Modifier.height(4.dp))
+            if (remaining.isFinished) {
+                Text(
+                    text = "Milestone reached!",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Medium
+                )
+            } else {
+                Text(
+                    text = remaining.shortSummary + " remaining",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = TimeUtils.formatEditorialDate(item.targetEpochMillis),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun TimeBox(
+    value: String,
+    label: String,
+    modifier: Modifier = Modifier,
+    isPrimary: Boolean = false
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = if (isPrimary)
+                MaterialTheme.colorScheme.primaryContainer
+            else
+                MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp, horizontal = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily.Monospace,
+                color = if (isPrimary)
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                else
+                    MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = if (isPrimary)
+                    MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 9.sp
+            )
+        }
+    }
+}
+
+@Composable
+fun MaterialProgressRing(
+    progress: Float,
+    size: androidx.compose.ui.unit.Dp,
+    strokeWidth: androidx.compose.ui.unit.Dp = 6.dp,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit = {}
+) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress.coerceIn(0f, 1f),
+        animationSpec = tween(800),
+        label = "progress_ring"
+    )
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val trackColor = MaterialTheme.colorScheme.primaryContainer
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier.size(size)
+    ) {
+        Canvas(modifier = Modifier.size(size)) {
+            val strokePx = strokeWidth.toPx()
+            val diameter = size.toPx() - strokePx
+            val radius = diameter / 2f
+            val center = androidx.compose.ui.geometry.Offset(size.toPx() / 2f, size.toPx() / 2f)
+            drawCircle(
+                color = trackColor,
+                radius = radius,
+                center = center,
+                style = Stroke(width = strokePx)
+            )
+            if (animatedProgress > 0f) {
+                drawArc(
+                    color = primaryColor,
+                    startAngle = -90f,
+                    sweepAngle = animatedProgress * 360f,
+                    useCenter = false,
+                    topLeft = androidx.compose.ui.geometry.Offset(strokePx / 2f, strokePx / 2f),
+                    size = androidx.compose.ui.geometry.Size(diameter, diameter),
+                    style = Stroke(width = strokePx, cap = StrokeCap.Round)
+                )
+            }
+        }
+        content()
+    }
+}
+
+@Composable
+private fun ArrivedBadge() {
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "🎉  Milestone reached!",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
             )
         }
     }

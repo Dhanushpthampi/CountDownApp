@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.updateAll
 import com.redgravity.countdown.CountdownWidget
 import com.redgravity.countdown.CountdownWidgetReceiver
@@ -37,16 +36,28 @@ object WidgetBindingManager {
         prefs.edit().remove("$KEY_PREFIX$appWidgetId").apply()
     }
 
-    fun getCountdownForWidget(context: Context, appWidgetId: Int): CountdownItem? {
+    /**
+     * Strict lookup: only returns a countdown if THIS widget has an explicit binding.
+     * Returns null if not bound. This prevents all unbound widgets from showing the same countdown.
+     */
+    fun getCountdownForWidgetStrict(context: Context, appWidgetId: Int): CountdownItem? {
         val repository = CountdownRepository.getInstance(context)
         val boundId = getCountdownIdForWidget(context, appWidgetId)
         if (boundId != null) {
             val item = repository.getById(boundId)
             if (item != null) return item
         }
-        // Fallback: pick the top pinned or first upcoming countdown
-        val all = repository.getAll()
-        return all.firstOrNull { it.isPinned } ?: all.firstOrNull()
+        // Explicit binding not found — return null so widget shows "tap to configure"
+        return null
+    }
+
+    /**
+     * Deprecated fallback that returns first available countdown.
+     * Use getCountdownForWidgetStrict() instead to avoid multiple widgets showing the same item.
+     */
+    @Deprecated("Use getCountdownForWidgetStrict instead")
+    fun getCountdownForWidget(context: Context, appWidgetId: Int): CountdownItem? {
+        return getCountdownForWidgetStrict(context, appWidgetId)
     }
 
     fun updateAllWidgets(context: Context) {

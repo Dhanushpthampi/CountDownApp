@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -12,7 +13,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import com.redgravity.countdown.data.CountdownRepository
 import com.redgravity.countdown.ui.screens.CountdownHomeScreen
 import com.redgravity.countdown.ui.theme.CountDownTheme
@@ -33,10 +33,10 @@ class MainActivity : ComponentActivity() {
             val scope = rememberCoroutineScope()
             val countdowns by repository.countdowns.collectAsState()
 
-            CountDownTheme(darkTheme = true) {
+            CountDownTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = Color(0xFF0C0E14)
+                    color = MaterialTheme.colorScheme.background
                 ) {
                     CountdownHomeScreen(
                         countdowns = countdowns,
@@ -49,11 +49,6 @@ class MainActivity : ComponentActivity() {
                         onDeleteCountdown = { id ->
                             scope.launch {
                                 repository.delete(id)
-                            }
-                        },
-                        onTogglePin = { id ->
-                            scope.launch {
-                                repository.togglePin(id)
                             }
                         }
                     )

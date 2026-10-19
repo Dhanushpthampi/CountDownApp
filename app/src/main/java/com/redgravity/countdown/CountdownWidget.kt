@@ -33,12 +33,12 @@ import androidx.glance.unit.ColorProvider
 import com.redgravity.countdown.data.CountdownRepository
 import com.redgravity.countdown.data.WidgetBindingManager
 import com.redgravity.countdown.model.CountdownItem
-import com.redgravity.countdown.model.CountdownVisualTheme
 import com.redgravity.countdown.util.TimeUtils
 
 class CountdownWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
+        // IMPORTANT: always resolve the appWidgetId from glanceId for proper per-widget binding
         val appWidgetManager = GlanceAppWidgetManager(context)
         val appWidgetId = try {
             appWidgetManager.getAppWidgetId(id)
@@ -46,42 +46,44 @@ class CountdownWidget : GlanceAppWidget() {
             -1
         }
 
+        // Look up the countdown bound specifically to THIS widget instance
         val countdownItem: CountdownItem? = if (appWidgetId != -1) {
-            WidgetBindingManager.getCountdownForWidget(context, appWidgetId)
+            WidgetBindingManager.getCountdownForWidgetStrict(context, appWidgetId)
         } else {
-            val repo = CountdownRepository.getInstance(context)
-            repo.getAll().firstOrNull { it.isPinned } ?: repo.getAll().firstOrNull()
+            null
         }
 
         provideContent {
+            val bgColor = Color(0xFF1C1B1F)       // M3 dark surface
+            val primaryColor = Color(0xFF80CBFF)   // M3 dark primary
+            val onSurfaceVariant = Color(0xFFC1C7CE)
+
             if (countdownItem == null) {
-                // Empty state card
                 val openIntent = Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 }
                 Box(
                     modifier = GlanceModifier
                         .fillMaxSize()
-                        .cornerRadius(22.dp)
-                        .background(Color(0xFF14161E))
+                        .cornerRadius(16.dp)
+                        .background(bgColor)
                         .padding(16.dp)
                         .clickable(actionStartActivity(openIntent)),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "CHRONOS",
+                            text = "⧗",
                             style = TextStyle(
-                                color = ColorProvider(Color(0xFFE5C07B)),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
+                                color = ColorProvider(primaryColor),
+                                fontSize = 28.sp
                             )
                         )
-                        Spacer(GlanceModifier.height(4.dp))
+                        Spacer(GlanceModifier.height(8.dp))
                         Text(
                             text = "Tap to choose a countdown",
                             style = TextStyle(
-                                color = ColorProvider(Color(0xFFB0B6C3)),
+                                color = ColorProvider(onSurfaceVariant),
                                 fontSize = 13.sp,
                                 textAlign = TextAlign.Center
                             )
@@ -89,7 +91,6 @@ class CountdownWidget : GlanceAppWidget() {
                     }
                 }
             } else {
-                val theme = countdownItem.visualTheme
                 val remaining = countdownItem.calculateRemaining()
                 val openIntent = Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -99,8 +100,8 @@ class CountdownWidget : GlanceAppWidget() {
                 Box(
                     modifier = GlanceModifier
                         .fillMaxSize()
-                        .cornerRadius(22.dp)
-                        .background(Color(theme.glanceBackgroundHex))
+                        .cornerRadius(16.dp)
+                        .background(bgColor)
                         .padding(16.dp)
                         .clickable(actionStartActivity(openIntent))
                 ) {
@@ -108,30 +109,17 @@ class CountdownWidget : GlanceAppWidget() {
                         modifier = GlanceModifier.fillMaxSize(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Header row with category and relative label
-                        Row(
-                            modifier = GlanceModifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "✦  ${countdownItem.category.title.uppercase()}",
-                                style = TextStyle(
-                                    color = ColorProvider(Color(theme.glanceAccentHex)),
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
+                        // Category label
+                        Text(
+                            text = countdownItem.category.title.uppercase(),
+                            style = TextStyle(
+                                color = ColorProvider(primaryColor),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
                             )
-                            Spacer(GlanceModifier.defaultWeight())
-                            Text(
-                                text = TimeUtils.formatCompactDate(countdownItem.targetEpochMillis),
-                                style = TextStyle(
-                                    color = ColorProvider(Color(0xFF8E95A5)),
-                                    fontSize = 11.sp
-                                )
-                            )
-                        }
+                        )
 
-                        Spacer(GlanceModifier.height(6.dp))
+                        Spacer(GlanceModifier.height(4.dp))
 
                         // Title
                         Text(
@@ -139,63 +127,63 @@ class CountdownWidget : GlanceAppWidget() {
                             maxLines = 1,
                             style = TextStyle(
                                 color = ColorProvider(Color.White),
-                                fontSize = 16.sp,
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         )
 
-                        Spacer(GlanceModifier.height(6.dp))
+                        Spacer(GlanceModifier.height(8.dp))
 
-                        // Main Counter
                         if (remaining.isFinished) {
                             Text(
-                                text = "MOMENT REACHED",
+                                text = "🎉 Milestone reached!",
                                 style = TextStyle(
-                                    color = ColorProvider(Color(theme.glanceAccentHex)),
-                                    fontSize = 20.sp,
+                                    color = ColorProvider(primaryColor),
+                                    fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             )
-                            Spacer(GlanceModifier.height(2.dp))
-                            Text(
-                                text = "Milestone achieved",
-                                style = TextStyle(
-                                    color = ColorProvider(Color(0xFF9FA6B6)),
-                                    fontSize = 12.sp
-                                )
-                            )
                         } else {
-                            Row(
-                                verticalAlignment = Alignment.Bottom
-                            ) {
+                            Row(verticalAlignment = Alignment.Bottom) {
                                 Text(
-                                    text = remaining.days.toString(),
+                                    text = remaining.smartValue.toString(),
                                     style = TextStyle(
-                                        color = ColorProvider(Color(theme.glanceAccentHex)),
-                                        fontSize = 38.sp,
+                                        color = ColorProvider(primaryColor),
+                                        fontSize = 40.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                 )
                                 Spacer(GlanceModifier.width(6.dp))
                                 Column {
+                                    Spacer(GlanceModifier.height(8.dp))
                                     Text(
-                                        text = remaining.daysLabel,
+                                        text = remaining.smartUnit,
                                         style = TextStyle(
-                                            color = ColorProvider(Color(0xFFD6DBE5)),
-                                            fontSize = 12.sp,
+                                            color = ColorProvider(Color.White),
+                                            fontSize = 14.sp,
                                             fontWeight = FontWeight.Bold
                                         )
                                     )
                                     Text(
-                                        text = "${remaining.formattedHours}h ${remaining.formattedMinutes}m remaining",
+                                        text = "remaining",
                                         style = TextStyle(
-                                            color = ColorProvider(Color(0xFF8E95A5)),
+                                            color = ColorProvider(onSurfaceVariant),
                                             fontSize = 11.sp
                                         )
                                     )
                                 }
                             }
                         }
+
+                        Spacer(GlanceModifier.height(4.dp))
+
+                        Text(
+                            text = TimeUtils.formatCompactDate(countdownItem.targetEpochMillis),
+                            style = TextStyle(
+                                color = ColorProvider(onSurfaceVariant),
+                                fontSize = 11.sp
+                            )
+                        )
                     }
                 }
             }
@@ -209,11 +197,15 @@ class CountdownWidgetReceiver : GlanceAppWidgetReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         if (intent.action == "com.redgravity.countdown.ACTION_WIDGET_PINNED") {
-            val countdownId = intent.getStringExtra("countdown_id")
-            if (countdownId != null) {
-                // Refresh widgets
-                WidgetBindingManager.updateAllWidgets(context)
-            }
+            WidgetBindingManager.updateAllWidgets(context)
+        }
+    }
+
+    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
+        super.onDeleted(context, appWidgetIds)
+        // Clean up bindings when widgets are removed
+        appWidgetIds.forEach { id ->
+            WidgetBindingManager.removeWidgetBinding(context, id)
         }
     }
 }

@@ -8,15 +8,12 @@ data class CountdownItem(
     val description: String = "",
     val targetEpochMillis: Long,
     val createdEpochMillis: Long = System.currentTimeMillis(),
+    // Optional: if set, progress is calculated from startEpochMillis instead of createdEpochMillis
+    val startEpochMillis: Long? = null,
     val category: CountdownCategory = CountdownCategory.MILESTONE,
-    val themeId: String = CountdownVisualTheme.OBSIDIAN_GOLD.id,
-    val cardStyle: CountdownCardStyle = CountdownCardStyle.ARCHITECTURAL,
-    val isPinned: Boolean = false,
+    val cardStyle: CountdownCardStyle = CountdownCardStyle.STANDARD,
     val updatedAtEpochMillis: Long = System.currentTimeMillis()
 ) {
-    val visualTheme: CountdownVisualTheme
-        get() = CountdownVisualTheme.fromId(themeId)
-
     fun calculateRemaining(currentTimeMillis: Long = System.currentTimeMillis()): CountdownTimeRemaining {
         val remainingMillis = targetEpochMillis - currentTimeMillis
         val isFinished = remainingMillis <= 0L
@@ -31,9 +28,18 @@ data class CountdownItem(
         val totalDays = days
         val totalWeeks = days / 7
 
-        val totalSpan = (targetEpochMillis - createdEpochMillis).coerceAtLeast(1L)
-        val elapsed = (currentTimeMillis - createdEpochMillis).coerceAtLeast(0L)
-        val progress = if (isFinished) 1.0f else (elapsed.toFloat() / totalSpan.toFloat()).coerceIn(0.0f, 1.0f)
+        // Calculate months and years remaining
+        val months = totalDays / 30
+        val years = totalDays / 365
+
+        // Progress: use startEpochMillis if set, otherwise use createdEpochMillis
+        val spanStart = startEpochMillis ?: createdEpochMillis
+        val hasProgress = startEpochMillis != null
+        val totalSpan = (targetEpochMillis - spanStart).coerceAtLeast(1L)
+        val elapsed = (currentTimeMillis - spanStart).coerceAtLeast(0L)
+        val progress = if (!hasProgress) 0f
+            else if (isFinished) 1.0f
+            else (elapsed.toFloat() / totalSpan.toFloat()).coerceIn(0.0f, 1.0f)
 
         return CountdownTimeRemaining(
             days = days,
@@ -43,8 +49,11 @@ data class CountdownItem(
             totalSeconds = totalSeconds,
             totalDays = totalDays,
             totalWeeks = totalWeeks,
+            totalMonths = months,
+            totalYears = years,
             isFinished = isFinished,
-            progressRatio = progress
+            progressRatio = progress,
+            hasProgress = hasProgress
         )
     }
 }

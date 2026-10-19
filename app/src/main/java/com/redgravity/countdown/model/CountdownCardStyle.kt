@@ -5,14 +5,14 @@ enum class CountdownCardStyle(
     val displayName: String,
     val description: String
 ) {
-    ARCHITECTURAL("architectural", "Architectural", "Clean editorial layout with crisp typography and subtle hairline dividers"),
-    NEO_GLASS("neo_glass", "Atmospheric Glass", "Soft glowing gradient mesh with translucent frosted glass card"),
-    RADIAL_PROGRESS("radial_progress", "Chronos Arc", "Dynamic circular progress ring measuring elapsed journey towards destination"),
-    BOLD_NUMERIC("bold_numeric", "Editorial Mono", "Striking high-impact typography with prominent tabular numerals");
+    STANDARD("standard", "Standard", "Clean Material card with days/hours/mins/secs breakdown"),
+    COMPACT("compact", "Compact", "Minimal single-line display with smart time unit"),
+    PROGRESS_BAR("progress_bar", "Progress Bar", "Linear progress bar showing journey completion"),
+    PROGRESS_CIRCLE("progress_circle", "Progress Ring", "Circular progress ring with time remaining");
 
     companion object {
         fun fromId(id: String): CountdownCardStyle {
-            return entries.firstOrNull { it.id.equals(id, ignoreCase = true) } ?: ARCHITECTURAL
+            return entries.firstOrNull { it.id.equals(id, ignoreCase = true) } ?: STANDARD
         }
     }
 }

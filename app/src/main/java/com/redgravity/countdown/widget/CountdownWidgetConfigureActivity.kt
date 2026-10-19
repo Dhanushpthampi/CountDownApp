@@ -5,12 +5,11 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,26 +19,28 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.ArrowForward
+import androidx.compose.material.icons.outlined.HourglassEmpty
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.redgravity.countdown.data.CountdownRepository
 import com.redgravity.countdown.data.WidgetBindingManager
 import com.redgravity.countdown.model.CountdownItem
@@ -50,15 +51,12 @@ class CountdownWidgetConfigureActivity : ComponentActivity() {
 
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
 
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Set the result to CANCELED. This will cause the widget host to cancel
-        // out of the widget placement if the user clicks back.
         setResult(RESULT_CANCELED)
 
-        // Find the widget id from the intent.
-        val intent = intent
         val extras = intent.extras
         if (extras != null) {
             appWidgetId = extras.getInt(
@@ -67,7 +65,6 @@ class CountdownWidgetConfigureActivity : ComponentActivity() {
             )
         }
 
-        // If this activity was started without an appWidgetId, finish.
         if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
             finish()
             return
@@ -76,33 +73,27 @@ class CountdownWidgetConfigureActivity : ComponentActivity() {
         val repository = CountdownRepository.getInstance(this)
 
         setContent {
-            CountDownTheme(darkTheme = true) {
+            CountDownTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = Color(0xFF0F1117)
+                    color = MaterialTheme.colorScheme.background
                 ) {
                     val countdowns by repository.countdowns.collectAsState()
-
                     ConfigureWidgetScreen(
                         countdowns = countdowns,
                         onSelectCountdown = { selectedItem ->
-                            // Bind this widget id to the chosen countdown
                             WidgetBindingManager.bindWidgetToCountdown(
                                 context = this@CountdownWidgetConfigureActivity,
                                 appWidgetId = appWidgetId,
                                 countdownId = selectedItem.id
                             )
-
-                            // Return RESULT_OK with appWidgetId
                             val resultValue = Intent().apply {
                                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
                             }
                             setResult(RESULT_OK, resultValue)
                             finish()
                         },
-                        onCancel = {
-                            finish()
-                        }
+                        onCancel = { finish() }
                     )
                 }
             }
@@ -110,6 +101,7 @@ class CountdownWidgetConfigureActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ConfigureWidgetScreen(
     countdowns: List<CountdownItem>,
@@ -117,180 +109,117 @@ private fun ConfigureWidgetScreen(
     onCancel: () -> Unit
 ) {
     Scaffold(
-        containerColor = Color(0xFF0F1117),
         topBar = {
-            Row(
+            LargeTopAppBar(
+                title = { Text("Choose a countdown") },
+                actions = {
+                    TextButton(onClick = onCancel) { Text("Cancel") }
+                },
+                colors = TopAppBarDefaults.largeTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
+            )
+        }
+    ) { padding ->
+        if (countdowns.isEmpty()) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Column {
-                    Text(
-                        text = "WIDGET SETUP",
-                        style = MaterialTheme.typography.labelMedium,
-                        letterSpacing = 2.sp,
-                        color = Color(0xFFE5C07B),
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        text = "Select a Countdown",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = Color.White,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-
-                IconButton(onClick = onCancel) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
-                        imageVector = Icons.Outlined.Close,
-                        contentDescription = "Cancel",
-                        tint = Color(0xFF9FA6B6)
+                        imageVector = Icons.Outlined.HourglassEmpty,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .padding(bottom = 16.dp)
+                            .fillMaxWidth(0.25f)
+                    )
+                    Text(
+                        text = "No countdowns yet",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = "Open the app to create your first countdown, then add a widget.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                 }
             }
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 20.dp)
-        ) {
-            Text(
-                text = "Choose which milestone to showcase on this home screen widget. You can place multiple widgets and customize each individually.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF8E95A5),
-                lineHeight = 20.sp
-            )
-
-            Spacer(Modifier.height(20.dp))
-
-            if (countdowns.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 40.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "No countdowns found. Open the app to create one first.",
-                        color = Color(0xFF8E95A5)
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(countdowns, key = { it.id }) { item ->
+                    WidgetPickerCard(
+                        item = item,
+                        onClick = { onSelectCountdown(item) }
                     )
                 }
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(countdowns, key = { it.id }) { item ->
-                        WidgetCountdownPickerCard(
-                            item = item,
-                            onClick = { onSelectCountdown(item) }
-                        )
-                    }
-                    item {
-                        Spacer(Modifier.height(30.dp))
-                    }
-                }
+                item { Spacer(Modifier.height(32.dp)) }
             }
         }
     }
 }
 
 @Composable
-private fun WidgetCountdownPickerCard(
+private fun WidgetPickerCard(
     item: CountdownItem,
     onClick: () -> Unit
 ) {
-    val theme = item.visualTheme
     val remaining = item.calculateRemaining()
 
-    Box(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(Color(theme.glanceBackgroundHex))
-            .border(1.dp, theme.cardBorder, RoundedCornerShape(18.dp))
-            .clickable(onClick = onClick)
-            .padding(18.dp)
+            .clickable(onClick = onClick),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        )
     ) {
-        Column {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                SuggestionChip(onClick = {}, label = { Text(item.category.title) })
+                Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "✦  ${item.category.title.uppercase()}",
-                    color = theme.accentColor,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
+                    text = item.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(Modifier.weight(1f))
+                Spacer(Modifier.height(4.dp))
                 Text(
-                    text = TimeUtils.formatCompactDate(item.targetEpochMillis),
-                    color = Color(0xFF8E95A5),
-                    fontSize = 12.sp
+                    text = if (remaining.isFinished) "Milestone reached"
+                    else "${remaining.smartValue} ${remaining.smartUnit} remaining  ·  ${TimeUtils.formatCompactDate(item.targetEpochMillis)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.width(12.dp))
 
-            Text(
-                text = item.title,
-                color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
+            Icon(
+                imageVector = Icons.Outlined.ArrowForward,
+                contentDescription = "Select",
+                tint = MaterialTheme.colorScheme.primary
             )
-
-            Spacer(Modifier.height(8.dp))
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text(
-                        text = remaining.days.toString(),
-                        color = theme.accentColor,
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        text = "${remaining.daysLabel} LEFT",
-                        color = Color(0xFFD6DBE5),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(theme.accentColor.copy(alpha = 0.15f))
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.CheckCircle,
-                        contentDescription = "Select",
-                        tint = theme.accentColor,
-                        modifier = Modifier.padding(end = 4.dp)
-                    )
-                    Text(
-                        text = "Assign",
-                        color = theme.accentColor,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
         }
     }
 }

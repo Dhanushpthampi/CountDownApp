@@ -1,10 +1,6 @@
 package com.redgravity.countdown.ui.screens
 
-import android.content.Context
-import android.content.Intent
 import android.widget.Toast
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,25 +12,25 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.PushPin
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -46,19 +42,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.redgravity.countdown.data.WidgetBindingManager
 import com.redgravity.countdown.model.CountdownItem
-import com.redgravity.countdown.ui.components.FullTimeUnitGrid
-import com.redgravity.countdown.ui.components.MetricBox
-import com.redgravity.countdown.ui.components.RadialProgressRing
+import com.redgravity.countdown.model.CountdownTimeRemaining
+import com.redgravity.countdown.ui.components.MaterialProgressRing
 import com.redgravity.countdown.util.TimeUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,28 +61,16 @@ fun CountdownDetailSheet(
     currentTimeMillis: Long,
     onDismiss: () -> Unit,
     onEdit: () -> Unit,
-    onDelete: () -> Unit,
-    onTogglePin: () -> Unit
+    onDelete: () -> Unit
 ) {
     val context = LocalContext.current
-    val theme = item.visualTheme
     val remaining = item.calculateRemaining(currentTimeMillis)
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = Color(0xFF0F1117),
-        dragHandle = {
-            Box(
-                modifier = Modifier
-                    .padding(vertical = 12.dp)
-                    .width(44.dp)
-                    .height(4.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF282E42))
-            )
-        }
+        containerColor = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier
@@ -98,48 +79,19 @@ fun CountdownDetailSheet(
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 36.dp)
         ) {
-            // Header: Category & Close
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "✦  ${item.category.title.uppercase()}",
-                        style = MaterialTheme.typography.labelMedium,
-                        letterSpacing = 1.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = theme.accentColor
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = "•  ${TimeUtils.formatRelativeStatus(item.targetEpochMillis, currentTimeMillis)}",
-                        fontSize = 11.sp,
-                        color = Color(0xFF8E95A5)
-                    )
-                }
+            // Category chip
+            SuggestionChip(
+                onClick = {},
+                label = { Text(item.category.title) }
+            )
 
-                IconButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Close,
-                        contentDescription = "Close",
-                        tint = Color(0xFF9FA6B6)
-                    )
-                }
-            }
+            Spacer(Modifier.height(8.dp))
 
-            Spacer(Modifier.height(14.dp))
-
-            // Title
             Text(
                 text = item.title,
                 style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
+                fontWeight = FontWeight.Normal,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             if (item.description.isNotBlank()) {
@@ -147,182 +99,218 @@ fun CountdownDetailSheet(
                 Text(
                     text = item.description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFFC7CDD9),
-                    lineHeight = 22.sp
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = androidx.compose.ui.unit.TextUnit(
+                        22f,
+                        androidx.compose.ui.unit.TextUnitType.Sp
+                    )
                 )
             }
 
             Spacer(Modifier.height(24.dp))
 
-            // Hero Radial Chronos Arc Centerpiece
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(
-                        Brush.linearGradient(
-                            listOf(theme.surfaceGradientStart, theme.surfaceGradientEnd)
-                        )
+            // Main countdown hero
+            if (remaining.isFinished) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
                     )
-                    .border(1.dp, theme.cardBorder, RoundedCornerShape(24.dp))
-                    .padding(vertical = 28.dp, horizontal = 20.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    RadialProgressRing(
-                        progress = remaining.progressRatio,
-                        accentColor = theme.accentColor,
-                        secondaryColor = theme.secondaryAccent,
-                        size = 140.dp,
-                        strokeWidth = 9.dp
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = if (remaining.isFinished) "0" else remaining.days.toString(),
-                                fontSize = 42.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = theme.accentColor,
-                                fontFamily = FontFamily.SansSerif
+                                text = "🎉",
+                                style = MaterialTheme.typography.displayMedium
                             )
+                            Spacer(Modifier.height(8.dp))
                             Text(
-                                text = "${remaining.daysLabel} LEFT",
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.sp,
-                                color = Color(0xFF9FA6B6)
+                                text = "Milestone reached!",
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = TimeUtils.formatEditorialDate(item.targetEpochMillis),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                             )
                         }
                     }
+                }
+            } else {
+                // Hero time display
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        if (remaining.hasProgress) {
+                            MaterialProgressRing(
+                                progress = remaining.progressRatio,
+                                size = 140.dp,
+                                strokeWidth = 10.dp
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = remaining.smartValue.toString(),
+                                        style = MaterialTheme.typography.displaySmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = remaining.smartUnit,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(16.dp))
+                            Text(
+                                text = "${(remaining.progressRatio * 100).toInt()}% of the journey elapsed",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        } else {
+                            // No progress ring, just big numbers
+                            Text(
+                                text = remaining.smartValue.toString(),
+                                style = MaterialTheme.typography.displayLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = remaining.smartUnit + " remaining",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
 
-                    Spacer(Modifier.height(20.dp))
+                        Spacer(Modifier.height(16.dp))
 
-                    if (remaining.isFinished) {
+                        // Live HH:MM:SS clock
                         Text(
-                            text = "MILESTONE REACHED",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = theme.accentColor,
-                            letterSpacing = 2.sp
-                        )
-                    } else {
-                        // Live High-Precision Clock
-                        Text(
-                            text = "${remaining.formattedHours} : ${remaining.formattedMinutes} : ${remaining.formattedSeconds}",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
+                            text = "${remaining.formattedHours}  :  ${remaining.formattedMinutes}  :  ${remaining.formattedSeconds}",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Light,
                             fontFamily = FontFamily.Monospace,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onSurface
                         )
-                        Spacer(Modifier.height(4.dp))
                         Text(
-                            text = "HOURS   •   MINUTES   •   SECONDS",
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            letterSpacing = 1.2.sp,
-                            color = Color(0xFF8E95A5)
+                            text = "hours  ·  minutes  ·  seconds",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                }
 
-                    Spacer(Modifier.height(16.dp))
-
-                    Text(
-                        text = "${(remaining.progressRatio * 100).toInt()}% of the journey elapsed",
-                        fontSize = 11.sp,
-                        color = Color(0xFF7E889B)
+                if (remaining.hasProgress) {
+                    Spacer(Modifier.height(8.dp))
+                    LinearProgressIndicator(
+                        progress = { remaining.progressRatio },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(MaterialTheme.shapes.small),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.primaryContainer,
+                        strokeCap = StrokeCap.Round
                     )
                 }
             }
 
             Spacer(Modifier.height(20.dp))
 
-            // Breakdown Metrics
-            Text(
-                text = "TOTAL BREAKDOWN",
-                style = MaterialTheme.typography.labelMedium,
-                letterSpacing = 1.5.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF9FA6B6)
-            )
-
-            Spacer(Modifier.height(10.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                MetricBox(
-                    value = remaining.totalWeeks.toString(),
-                    label = "Weeks",
-                    accentColor = theme.accentColor,
-                    modifier = Modifier.weight(1f)
+            // Time breakdown
+            if (!remaining.isFinished) {
+                Text(
+                    text = "Breakdown",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                MetricBox(
-                    value = (remaining.totalSeconds / 3600).toString(),
-                    label = "Hours",
-                    accentColor = theme.accentColor,
-                    modifier = Modifier.weight(1f)
-                )
-                MetricBox(
-                    value = (remaining.totalSeconds / 60).toString(),
-                    label = "Minutes",
-                    accentColor = theme.accentColor,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(Modifier.height(20.dp))
-
-            // Destination details
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFF161922))
-                    .border(1.dp, Color(0xFF282E42), RoundedCornerShape(16.dp))
-                    .padding(16.dp)
-            ) {
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Target Date",
-                            fontSize = 12.sp,
-                            color = Color(0xFF8E95A5)
-                        )
-                        Text(
-                            text = TimeUtils.formatEditorialDate(item.targetEpochMillis),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White
-                        )
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Target Time",
-                            fontSize = 12.sp,
-                            color = Color(0xFF8E95A5)
-                        )
-                        Text(
-                            text = TimeUtils.formatTime(item.targetEpochMillis),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            fontFamily = FontFamily.Monospace,
-                            color = Color.White
-                        )
-                    }
+                Spacer(Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    DetailMetricCard(
+                        value = remaining.totalWeeks.toString(),
+                        label = "Weeks",
+                        modifier = Modifier.weight(1f)
+                    )
+                    DetailMetricCard(
+                        value = (remaining.totalSeconds / 3600).toString(),
+                        label = "Hours",
+                        modifier = Modifier.weight(1f)
+                    )
+                    DetailMetricCard(
+                        value = (remaining.totalSeconds / 60).toString(),
+                        label = "Minutes",
+                        modifier = Modifier.weight(1f)
+                    )
                 }
+                Spacer(Modifier.height(16.dp))
             }
+
+            // Date info
+            HorizontalDivider()
+            Spacer(Modifier.height(8.dp))
+            ListItem(
+                headlineContent = { Text("Target date") },
+                trailingContent = {
+                    Text(
+                        TimeUtils.formatEditorialDate(item.targetEpochMillis),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            )
+            ListItem(
+                headlineContent = { Text("Target time") },
+                trailingContent = {
+                    Text(
+                        TimeUtils.formatTime(item.targetEpochMillis),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            )
+            if (item.startEpochMillis != null) {
+                ListItem(
+                    headlineContent = { Text("Start date") },
+                    trailingContent = {
+                        Text(
+                            TimeUtils.formatEditorialDate(item.startEpochMillis),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                )
+            }
+            HorizontalDivider()
 
             Spacer(Modifier.height(24.dp))
 
-            // Action Buttons
-            // 1. Pin to Home Screen Widget
+            // Add to widget
             Button(
                 onClick = {
                     val pinned = WidgetBindingManager.requestPinWidget(context, item.id)
@@ -331,112 +319,56 @@ fun CountdownDetailSheet(
                     } else {
                         Toast.makeText(
                             context,
-                            "To add widget: Long press home screen -> Widgets -> Chronos",
+                            "Long press your home screen → Widgets → Countdown",
                             Toast.LENGTH_LONG
                         ).show()
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = theme.accentColor,
-                    contentColor = Color(0xFF141310)
-                ),
-                shape = RoundedCornerShape(14.dp)
+                shape = MaterialTheme.shapes.small
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Widgets,
-                    contentDescription = "Widget",
+                    contentDescription = null,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(Modifier.width(8.dp))
-                Text(
-                    text = "Add to Home Screen Widget",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
+                Text("Add to home screen widget")
             }
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(8.dp))
 
-            // 2. Share & Pin row
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OutlinedButton(
-                    onClick = {
-                        shareCountdown(context, item)
-                    },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Share,
-                        contentDescription = "Share",
-                        modifier = Modifier.size(16.dp),
-                        tint = Color.White
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text("Share", color = Color.White)
-                }
-
-                OutlinedButton(
-                    onClick = onTogglePin,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.PushPin,
-                        contentDescription = "Pin",
-                        modifier = Modifier.size(16.dp),
-                        tint = if (item.isPinned) theme.accentColor else Color.White
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        text = if (item.isPinned) "Unpin" else "Pin Top",
-                        color = Color.White
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(10.dp))
-
-            // 3. Edit & Delete row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                OutlinedButton(
+                FilledTonalButton(
                     onClick = onEdit,
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(14.dp)
+                    shape = MaterialTheme.shapes.small
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Edit,
-                        contentDescription = "Edit",
-                        modifier = Modifier.size(16.dp),
-                        tint = Color.White
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
                     )
                     Spacer(Modifier.width(6.dp))
-                    Text("Edit", color = Color.White)
+                    Text("Edit")
                 }
 
                 OutlinedButton(
                     onClick = { showDeleteConfirm = true },
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Color(0xFFFF6B6B)
-                    )
+                    shape = MaterialTheme.shapes.small
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Delete,
-                        contentDescription = "Delete",
+                        contentDescription = null,
                         modifier = Modifier.size(16.dp),
-                        tint = Color(0xFFFF6B6B)
+                        tint = MaterialTheme.colorScheme.error
                     )
                     Spacer(Modifier.width(6.dp))
-                    Text("Delete", color = Color(0xFFFF6B6B))
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
                 }
             }
         }
@@ -445,20 +377,8 @@ fun CountdownDetailSheet(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            containerColor = Color(0xFF1B1E2B),
-            title = {
-                Text(
-                    text = "Delete Countdown?",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Text(
-                    text = "Are you sure you want to delete \"${item.title}\"? This action cannot be undone.",
-                    color = Color(0xFFC7CDD9)
-                )
-            },
+            title = { Text("Delete countdown?") },
+            text = { Text("\"${item.title}\" will be permanently deleted.") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -466,30 +386,49 @@ fun CountdownDetailSheet(
                         onDelete()
                     }
                 ) {
-                    Text("Delete", color = Color(0xFFFF6B6B), fontWeight = FontWeight.Bold)
+                    Text("Delete", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Cancel", color = Color(0xFF9FA6B6))
+                    Text("Cancel")
                 }
             }
         )
     }
 }
 
-private fun shareCountdown(context: Context, item: CountdownItem) {
-    val remaining = item.calculateRemaining()
-    val summary = if (remaining.isFinished) {
-        "\"${item.title}\" has reached its moment on ${TimeUtils.formatEditorialDate(item.targetEpochMillis)}."
-    } else {
-        "\"${item.title}\": ${remaining.days} days, ${remaining.hours} hours remaining until ${TimeUtils.formatEditorialDate(item.targetEpochMillis)}."
+@Composable
+private fun DetailMetricCard(
+    value: String,
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp, horizontal = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily.Monospace,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
-
-    val sendIntent = Intent(Intent.ACTION_SEND).apply {
-        type = "text/plain"
-        putExtra(Intent.EXTRA_SUBJECT, item.title)
-        putExtra(Intent.EXTRA_TEXT, "$summary\n\nTracked with Chronos")
-    }
-    context.startActivity(Intent.createChooser(sendIntent, "Share Countdown"))
 }
