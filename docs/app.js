@@ -1,6 +1,6 @@
 /**
- * CountDown Landing Page — Interactive Simulation & Logic
- * Replicates the exact calendar-accurate calculation from the Android app!
+ * CountDown Landing Page — Interactive Simulation & Dynamic Features
+ * Fully responsive logic, calendar-accurate breakdown, custom builder, and mobile UI controls.
  */
 
 const PRESETS = {
@@ -10,7 +10,7 @@ const PRESETS = {
     badgeColor: "rgba(56, 189, 248, 0.15)",
     badgeBorder: "rgba(56, 189, 248, 0.35)",
     badgeTextColor: "#38BDF8",
-    targetOffsetDays: 132, // approx 4 months 12 days ahead
+    targetOffsetDays: 132,
     startOffsetDays: -90
   },
   newyear: {
@@ -42,8 +42,18 @@ const PRESETS = {
   }
 };
 
+const CATEGORY_COLORS = {
+  TRAVEL: { bg: "rgba(56, 189, 248, 0.15)", border: "rgba(56, 189, 248, 0.35)", text: "#38BDF8" },
+  MILESTONE: { bg: "rgba(167, 139, 250, 0.15)", border: "rgba(167, 139, 250, 0.35)", text: "#A78BFA" },
+  CELEBRATION: { bg: "rgba(251, 191, 36, 0.15)", border: "rgba(251, 191, 36, 0.35)", text: "#FBBF24" },
+  CAREER: { bg: "rgba(99, 102, 241, 0.15)", border: "rgba(99, 102, 241, 0.35)", text: "#818CF8" },
+  GOAL: { bg: "rgba(52, 211, 153, 0.15)", border: "rgba(52, 211, 153, 0.35)", text: "#34D399" },
+  CREATIVE: { bg: "rgba(244, 114, 182, 0.15)", border: "rgba(244, 114, 182, 0.35)", text: "#F472B6" },
+  ASTRONOMY: { bg: "rgba(192, 132, 252, 0.15)", border: "rgba(192, 132, 252, 0.35)", text: "#C084FC" }
+};
+
 let currentPresetKey = 'trip';
-let activeEvent = null;
+let customEventState = null;
 
 function initPresets() {
   const now = new Date();
@@ -52,6 +62,15 @@ function initPresets() {
       preset.targetDate = new Date(now.getTime() + preset.targetOffsetDays * 86400000);
       preset.startDate = new Date(now.getTime() + preset.startOffsetDays * 86400000);
     }
+  }
+
+  // Set default custom date picker value (1 month ahead)
+  const customDateInput = document.getElementById('custom-date-input');
+  if (customDateInput) {
+    const nextMonth = new Date(now.getTime() + 30 * 86400000);
+    // Format YYYY-MM-DDTHH:MM
+    const isoStr = new Date(nextMonth.getTime() - nextMonth.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    customDateInput.value = isoStr;
   }
 }
 
@@ -161,9 +180,16 @@ function calculateCalendarBreakdown(targetDate, startDate, currentDate = new Dat
   };
 }
 
+function getActiveEvent() {
+  if (currentPresetKey === 'custom' && customEventState) {
+    return customEventState;
+  }
+  return PRESETS[currentPresetKey] || PRESETS.trip;
+}
+
 function updateUI() {
-  const event = PRESETS[currentPresetKey];
-  if (!event) return;
+  const event = getActiveEvent();
+  if (!event || !event.targetDate) return;
 
   const result = calculateCalendarBreakdown(event.targetDate, event.startDate);
 
@@ -183,15 +209,15 @@ function updateUI() {
 
   if (titleEl) titleEl.textContent = event.title;
   if (dateEl) {
-    const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
     dateEl.textContent = `Target: ${event.targetDate.toLocaleDateString(undefined, options)}`;
   }
 
   if (badgeEl) {
-    badgeEl.textContent = event.category;
-    badgeEl.style.backgroundColor = event.badgeColor;
-    badgeEl.style.borderColor = event.badgeBorder;
-    badgeEl.style.color = event.badgeTextColor;
+    badgeEl.textContent = event.category || 'MILESTONE';
+    badgeEl.style.backgroundColor = event.badgeColor || 'rgba(167, 139, 250, 0.15)';
+    badgeEl.style.borderColor = event.badgeBorder || 'rgba(167, 139, 250, 0.35)';
+    badgeEl.style.color = event.badgeTextColor || '#A78BFA';
   }
 
   if (readableEl) readableEl.textContent = result.readable;
@@ -208,27 +234,206 @@ function updateUI() {
 
 // Preset button handlers
 function setupPresets() {
-  const buttons = document.querySelectorAll('.preset-chip');
+  const buttons = document.querySelectorAll('.preset-chip[data-event]');
   buttons.forEach(btn => {
     btn.addEventListener('click', () => {
-      buttons.forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.preset-chip').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       currentPresetKey = btn.dataset.event;
+
+      // Hide custom panel if switching to standard preset
+      const customPanel = document.getElementById('custom-event-panel');
+      if (customPanel) customPanel.style.display = 'none';
+
       updateUI();
     });
   });
+
+  // Custom Event Toggle
+  const customToggleBtn = document.getElementById('custom-event-toggle');
+  const customPanel = document.getElementById('custom-event-panel');
+  const closeCustomBtn = document.getElementById('btn-close-custom');
+
+  if (customToggleBtn && customPanel) {
+    customToggleBtn.addEventListener('click', () => {
+      document.querySelectorAll('.preset-chip').forEach(b => b.classList.remove('active'));
+      customToggleBtn.classList.add('active');
+      customPanel.style.display = customPanel.style.display === 'none' ? 'block' : 'none';
+      currentPresetKey = 'custom';
+      updateCustomFromInputs();
+      updateUI();
+    });
+  }
+
+  if (closeCustomBtn && customPanel) {
+    closeCustomBtn.addEventListener('click', () => {
+      customPanel.style.display = 'none';
+      // Revert to trip
+      const tripBtn = document.getElementById('preset-trip');
+      if (tripBtn) {
+        document.querySelectorAll('.preset-chip').forEach(b => b.classList.remove('active'));
+        tripBtn.classList.add('active');
+        currentPresetKey = 'trip';
+        updateUI();
+      }
+    });
+  }
+
+  // Inputs live binding
+  const titleInput = document.getElementById('custom-title-input');
+  const dateInput = document.getElementById('custom-date-input');
+  const catSelect = document.getElementById('custom-category-select');
+
+  [titleInput, dateInput, catSelect].forEach(input => {
+    if (input) {
+      input.addEventListener('input', () => {
+        if (currentPresetKey === 'custom') {
+          updateCustomFromInputs();
+          updateUI();
+        }
+      });
+    }
+  });
 }
 
-// Navbar scroll blur effect
+function updateCustomFromInputs() {
+  const titleInput = document.getElementById('custom-title-input');
+  const dateInput = document.getElementById('custom-date-input');
+  const catSelect = document.getElementById('custom-category-select');
+
+  const title = (titleInput && titleInput.value.trim()) || "My Custom Event";
+  let targetDate = new Date();
+  if (dateInput && dateInput.value) {
+    targetDate = new Date(dateInput.value);
+  } else {
+    targetDate = new Date(Date.now() + 30 * 86400000);
+  }
+
+  const category = (catSelect && catSelect.value) || "MILESTONE";
+  const colors = CATEGORY_COLORS[category] || CATEGORY_COLORS.MILESTONE;
+
+  customEventState = {
+    title,
+    category,
+    badgeColor: colors.bg,
+    badgeBorder: colors.border,
+    badgeTextColor: colors.text,
+    targetDate,
+    startDate: new Date(Date.now() - 15 * 86400000)
+  };
+}
+
+// Mobile Hamburger Drawer
+function setupMobileMenu() {
+  const toggleBtn = document.getElementById('nav-toggle');
+  const drawer = document.getElementById('mobile-drawer');
+  const backdrop = document.getElementById('drawer-backdrop');
+  const drawerLinks = document.querySelectorAll('.drawer-link');
+
+  function toggleMenu(open) {
+    const isOpen = open !== undefined ? open : !drawer.classList.contains('open');
+    if (isOpen) {
+      drawer.classList.add('open');
+      toggleBtn.classList.add('open');
+      toggleBtn.setAttribute('aria-expanded', 'true');
+      backdrop.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    } else {
+      drawer.classList.remove('open');
+      toggleBtn.classList.remove('open');
+      toggleBtn.setAttribute('aria-expanded', 'false');
+      backdrop.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  }
+
+  if (toggleBtn && drawer && backdrop) {
+    toggleBtn.addEventListener('click', () => toggleMenu());
+    backdrop.addEventListener('click', () => toggleMenu(false));
+
+    drawerLinks.forEach(link => {
+      link.addEventListener('click', () => toggleMenu(false));
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && drawer.classList.contains('open')) {
+        toggleMenu(false);
+      }
+    });
+  }
+}
+
+// Mobile Screenshot Tabs
+function setupScreenshotTabs() {
+  const tabs = document.querySelectorAll('.shot-tab');
+  const cards = [
+    document.getElementById('shot-card-0'),
+    document.getElementById('shot-card-1'),
+    document.getElementById('shot-card-2')
+  ];
+
+  function setActiveShot(index) {
+    tabs.forEach((tab, i) => {
+      if (i === index) {
+        tab.classList.add('active');
+      } else {
+        tab.classList.remove('active');
+      }
+    });
+
+    cards.forEach((card, i) => {
+      if (card) {
+        if (i === index) {
+          card.classList.add('active-shot');
+        } else {
+          card.classList.remove('active-shot');
+        }
+      }
+    });
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const idx = parseInt(tab.dataset.shot, 10);
+      setActiveShot(idx);
+    });
+  });
+
+  // Default to screenshot 1 (All styles) on mobile
+  setActiveShot(1);
+}
+
+// Floating Mobile Bar & Scroll Effects
 function setupScrollEffects() {
   const navbar = document.getElementById('navbar');
+  const floatingBar = document.getElementById('floating-mobile-bar');
+  const heroSection = document.getElementById('hero');
+
   window.addEventListener('scroll', () => {
-    if (window.scrollY > 40) {
-      navbar.style.background = 'rgba(9, 10, 15, 0.9)';
-      navbar.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.5)';
-    } else {
-      navbar.style.background = 'rgba(9, 10, 15, 0.7)';
-      navbar.style.boxShadow = 'none';
+    const scrollY = window.scrollY;
+
+    // Navbar blur
+    if (navbar) {
+      if (scrollY > 40) {
+        navbar.style.background = 'rgba(9, 10, 15, 0.92)';
+        navbar.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.5)';
+      } else {
+        navbar.style.background = 'rgba(9, 10, 15, 0.75)';
+        navbar.style.boxShadow = 'none';
+      }
+    }
+
+    // Floating download bar (shows after scrolling past hero, hides near bottom)
+    if (floatingBar && heroSection) {
+      const heroBottom = heroSection.offsetTop + heroSection.offsetHeight;
+      const isPastHero = scrollY > heroBottom - 200;
+      const isNearBottom = (window.innerHeight + scrollY) >= document.body.offsetHeight - 250;
+
+      if (isPastHero && !isNearBottom) {
+        floatingBar.classList.add('visible');
+      } else {
+        floatingBar.classList.remove('visible');
+      }
     }
   });
 }
@@ -237,6 +442,8 @@ function setupScrollEffects() {
 document.addEventListener('DOMContentLoaded', () => {
   initPresets();
   setupPresets();
+  setupMobileMenu();
+  setupScreenshotTabs();
   setupScrollEffects();
   updateUI();
 

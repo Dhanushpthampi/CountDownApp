@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title>CountDown — Elegant Human-Readable Event Countdown for Android</title>
   <meta name="description" content="Track what matters with CountDown. A sleek Material You Android app that calculates real calendar time like '4 months 10 days remaining'. Free & open source.">
   <meta name="keywords" content="Android countdown app, event tracker, countdown timer, Material You, Jetpack Compose, open source Android">
   <meta name="author" content="Dhanush (RedGravity)">
+  <meta name="theme-color" content="#090A0F">
   
   <!-- Open Graph -->
   <meta property="og:title" content="CountDown — Elegant Event Countdown App">
@@ -18,14 +19,16 @@
   <!-- Favicon / Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Ambient background glow elements -->
-  <div class="glow-orb orb-1" aria-hidden="true"></div>
-  <div class="glow-orb orb-2" aria-hidden="true"></div>
-  <div class="glow-orb orb-3" aria-hidden="true"></div>
+  <!-- Ambient background glow elements in overflow-contained wrapper -->
+  <div class="glow-container" aria-hidden="true">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+  </div>
 
   <!-- Navigation -->
   <header class="navbar" id="navbar">
@@ -35,29 +38,66 @@
         <span class="logo-text">Count<span class="highlight">Down</span></span>
       </a>
 
+      <!-- Desktop Nav Menu -->
       <nav class="nav-menu" id="nav-menu" aria-label="Main Navigation">
         <a href="#features" class="nav-link" id="nav-features">Features</a>
         <a href="#interactive-demo" class="nav-link" id="nav-demo">Live Demo</a>
         <a href="#screenshots" class="nav-link" id="nav-screenshots">Screenshots</a>
-        <a href="#comparison" class="nav-link" id="nav-comparison">Why It's Different</a>
+        <a href="#comparison" class="nav-link" id="nav-comparison">Why CountDown</a>
       </nav>
 
       <div class="nav-actions">
-        <a href="https://github.com/Dhanushpthampi/CountDownApp" target="_blank" rel="noopener noreferrer" class="btn btn-ghost" id="github-header-btn">
+        <a href="https://github.com/Dhanushpthampi/CountDownApp" target="_blank" rel="noopener noreferrer" class="btn btn-ghost desktop-only" id="github-header-btn">
           <svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
             <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
           </svg>
           <span>Star</span>
         </a>
-        <a href="https://github.com/Dhanushpthampi/CountDownApp/releases/download/v1.0.0/CountDown-v1.0.0.apk" class="btn btn-primary" id="download-header-btn">
+
+        <a href="https://github.com/Dhanushpthampi/CountDownApp/releases/download/v1.0.0/CountDown-v1.0.0.apk" class="btn btn-primary btn-sm" id="download-header-btn">
+          <svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+          </svg>
+          <span class="btn-text">Download APK</span>
+        </a>
+
+        <!-- Mobile Hamburger Toggle -->
+        <button class="nav-toggle" id="nav-toggle" aria-label="Toggle Navigation Menu" aria-expanded="false">
+          <span class="bar bar-1"></span>
+          <span class="bar bar-2"></span>
+          <span class="bar bar-3"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Drawer Menu -->
+    <div class="mobile-drawer" id="mobile-drawer" aria-hidden="true">
+      <div class="drawer-links">
+        <a href="#features" class="drawer-link" id="drawer-features">✨ Features</a>
+        <a href="#interactive-demo" class="drawer-link" id="drawer-demo">⚡ Live Demo &amp; Custom Builder</a>
+        <a href="#screenshots" class="drawer-link" id="drawer-screenshots">📸 Screenshots</a>
+        <a href="#comparison" class="drawer-link" id="drawer-comparison">⚖️ Why CountDown</a>
+      </div>
+
+      <div class="drawer-footer">
+        <a href="https://github.com/Dhanushpthampi/CountDownApp/releases/download/v1.0.0/CountDown-v1.0.0.apk" class="btn btn-primary btn-block" id="drawer-download-btn">
           <svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
           </svg>
-          <span>Download APK</span>
+          <span>Download CountDown APK (v1.0.0)</span>
+        </a>
+        <a href="https://github.com/Dhanushpthampi/CountDownApp" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-block" id="drawer-github-btn">
+          <svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span>View on GitHub</span>
         </a>
       </div>
     </div>
   </header>
+
+  <!-- Backdrop overlay for mobile drawer -->
+  <div class="drawer-backdrop" id="drawer-backdrop"></div>
 
   <main>
     <!-- Hero Section -->
@@ -84,8 +124,8 @@
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
             </svg>
             <div class="btn-text-col">
-              <span class="btn-sub">Instant direct install</span>
-              <span class="btn-main">Download APK (v1.0.0)</span>
+              <span class="btn-sub">Direct APK Install</span>
+              <span class="btn-main">Download CountDown</span>
             </div>
           </a>
 
@@ -94,8 +134,8 @@
               <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
             </svg>
             <div class="btn-text-col">
-              <span class="btn-sub">Open source repo</span>
-              <span class="btn-main">GitHub Repository</span>
+              <span class="btn-sub">Open Source Repo</span>
+              <span class="btn-main">GitHub Project</span>
             </div>
           </a>
         </div>
@@ -103,7 +143,7 @@
         <div class="hero-specs-row">
           <div class="spec-item"><span class="spec-check">✓</span> 1.9 MB Size</div>
           <div class="spec-item"><span class="spec-check">✓</span> Zero Ads &amp; Offline</div>
-          <div class="spec-item"><span class="spec-check">✓</span> Android 7.0 (API 24+)</div>
+          <div class="spec-item"><span class="spec-check">✓</span> Android 7.0+</div>
           <div class="spec-item"><span class="spec-check">✓</span> Material You M3</div>
         </div>
       </div>
@@ -128,12 +168,45 @@
 
       <div class="interactive-card-wrapper">
         <div class="demo-card-container">
-          <!-- Preset buttons -->
-          <div class="demo-presets" role="tablist" aria-label="Event Presets">
-            <button class="preset-chip active" data-event="trip" id="preset-trip">✈️ Summer Vacation</button>
-            <button class="preset-chip" data-event="newyear" id="preset-newyear">🎆 New Year's Eve</button>
-            <button class="preset-chip" data-event="launch" id="preset-launch">🚀 Dream Project Launch</button>
-            <button class="preset-chip" data-event="birthday" id="preset-birthday">🎂 25th Birthday</button>
+          <!-- Preset buttons (scrollable on mobile) -->
+          <div class="demo-presets-container">
+            <div class="demo-presets" role="tablist" aria-label="Event Presets">
+              <button class="preset-chip active" data-event="trip" id="preset-trip">✈️ Tokyo Trip</button>
+              <button class="preset-chip" data-event="newyear" id="preset-newyear">🎆 New Year 2027</button>
+              <button class="preset-chip" data-event="launch" id="preset-launch">🚀 Project Launch</button>
+              <button class="preset-chip" data-event="birthday" id="preset-birthday">🎂 25th Birthday</button>
+              <button class="preset-chip custom-trigger" id="custom-event-toggle">✏️ Custom Event</button>
+            </div>
+          </div>
+
+          <!-- Dynamic Custom Event Builder (collapsible) -->
+          <div class="custom-event-panel" id="custom-event-panel" style="display: none;">
+            <div class="panel-header">
+              <h4>Build Your Own Real-Time Countdown</h4>
+              <button class="btn-close-panel" id="btn-close-custom" aria-label="Close builder">&times;</button>
+            </div>
+            <div class="custom-form-grid">
+              <div class="form-group">
+                <label for="custom-title-input">Event Name</label>
+                <input type="text" id="custom-title-input" class="form-input" placeholder="e.g. My Next Vacation" value="My Dream Milestone">
+              </div>
+              <div class="form-group">
+                <label for="custom-date-input">Target Date &amp; Time</label>
+                <input type="datetime-local" id="custom-date-input" class="form-input">
+              </div>
+              <div class="form-group">
+                <label for="custom-category-select">Category</label>
+                <select id="custom-category-select" class="form-select">
+                  <option value="TRAVEL">✈️ Travel</option>
+                  <option value="MILESTONE" selected>⭐ Milestone</option>
+                  <option value="CELEBRATION">🎉 Celebration</option>
+                  <option value="CAREER">💼 Career</option>
+                  <option value="GOAL">🎯 Goal</option>
+                  <option value="CREATIVE">🎨 Creative</option>
+                  <option value="ASTRONOMY">🚀 Astronomy</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           <!-- Main Live Card -->
@@ -152,7 +225,7 @@
               <div class="readable-value" id="demo-readable-value">4 months 12 days remaining</div>
             </div>
 
-            <!-- Precision Breakdown Grid -->
+            <!-- Precision Breakdown Grid (3 cols on mobile, 6 cols on desktop) -->
             <div class="breakdown-grid">
               <div class="metric-box">
                 <span class="metric-num" id="demo-years">0</span>
@@ -203,8 +276,15 @@
         <p class="section-desc">Crafted with Jetpack Compose, dynamic Material You theming, and smooth physics-based fluid transitions.</p>
       </div>
 
-      <div class="screenshots-grid">
-        <div class="screenshot-card">
+      <!-- Mobile tab selector for quick screenshot preview -->
+      <div class="mobile-shot-tabs" id="mobile-shot-tabs">
+        <button class="shot-tab active" data-shot="0">Home</button>
+        <button class="shot-tab" data-shot="1">All Styles</button>
+        <button class="shot-tab" data-shot="2">Detail Sheet</button>
+      </div>
+
+      <div class="screenshots-grid" id="screenshots-grid">
+        <div class="screenshot-card" id="shot-card-0">
           <div class="shot-frame">
             <img src="images/screenshot0.jpeg" alt="CountDown Home screen displaying quick category chips and new countdown FAB" loading="lazy">
           </div>
@@ -214,7 +294,7 @@
           </div>
         </div>
 
-        <div class="screenshot-card featured">
+        <div class="screenshot-card featured" id="shot-card-1">
           <div class="shot-frame">
             <img src="images/screenshot1.jpeg" alt="CountDown displaying four distinct card styles on the same screen" loading="lazy">
           </div>
@@ -224,7 +304,7 @@
           </div>
         </div>
 
-        <div class="screenshot-card">
+        <div class="screenshot-card" id="shot-card-2">
           <div class="shot-frame">
             <img src="images/screenshot2.jpeg" alt="CountDown Detail sheet showing progress ring, live clock, and exact breakdown" loading="lazy">
           </div>
@@ -244,48 +324,123 @@
         <p class="section-desc">Most countdown timers confuse you with massive numbers. CountDown speaks like a real person.</p>
       </div>
 
-      <div class="comparison-table-wrapper">
-        <table class="comparison-table">
-          <thead>
-            <tr>
-              <th>Feature</th>
-              <th class="col-traditional">Ordinary Countdown Apps</th>
-              <th class="col-countdown">✨ CountDown App</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Display Format</strong></td>
-              <td class="text-dim">"134 days remaining" (unintuitive)</td>
-              <td class="text-accent"><strong>"4 months 12 days remaining"</strong></td>
-            </tr>
-            <tr>
-              <td><strong>Calendar Mathematics</strong></td>
-              <td class="text-dim">Flat 30-day divide (inaccurate)</td>
-              <td class="text-accent"><strong>True leap year &amp; variable month calendar math</strong></td>
-            </tr>
-            <tr>
-              <td><strong>Card Aesthetics</strong></td>
-              <td class="text-dim">Generic plain list rows</td>
-              <td class="text-accent"><strong>4 custom layouts (Rings, Bars, Compact, Artistic)</strong></td>
-            </tr>
-            <tr>
-              <td><strong>Home Screen Widget</strong></td>
-              <td class="text-dim">Outdated legacy RemoteViews widget</td>
-              <td class="text-accent"><strong>Modern Android Glance Material 3 Widget</strong></td>
-            </tr>
-            <tr>
-              <td><strong>Privacy &amp; Ads</strong></td>
-              <td class="text-dim">Interstitials, popups, and analytics trackers</td>
-              <td class="text-accent"><strong>100% Offline, Zero Ads, Zero Tracking</strong></td>
-            </tr>
-            <tr>
-              <td><strong>App Size</strong></td>
-              <td class="text-dim">25MB – 50MB bloated download</td>
-              <td class="text-accent"><strong>Ultra-lean 1.9 MB optimized APK</strong></td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Responsive Comparison View -->
+      <div class="comparison-container">
+        <!-- Desktop Table (Scrollable on tablet/desktop) -->
+        <div class="comparison-table-wrapper">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th class="col-traditional">Ordinary Countdown Apps</th>
+                <th class="col-countdown">✨ CountDown App</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Display Format</strong></td>
+                <td class="text-dim">"134 days remaining" (unintuitive)</td>
+                <td class="text-accent"><strong>"4 months 12 days remaining"</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Calendar Mathematics</strong></td>
+                <td class="text-dim">Flat 30-day divide (inaccurate)</td>
+                <td class="text-accent"><strong>True leap year &amp; variable month calendar math</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Card Aesthetics</strong></td>
+                <td class="text-dim">Generic plain list rows</td>
+                <td class="text-accent"><strong>4 custom layouts (Rings, Bars, Compact, Artistic)</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Home Screen Widget</strong></td>
+                <td class="text-dim">Outdated legacy RemoteViews widget</td>
+                <td class="text-accent"><strong>Modern Android Glance Material 3 Widget</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Privacy &amp; Ads</strong></td>
+                <td class="text-dim">Interstitials, popups, and analytics trackers</td>
+                <td class="text-accent"><strong>100% Offline, Zero Ads, Zero Tracking</strong></td>
+              </tr>
+              <tr>
+                <td><strong>App Size</strong></td>
+                <td class="text-dim">25MB – 50MB bloated download</td>
+                <td class="text-accent"><strong>Ultra-lean 1.9 MB optimized APK</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile Dynamic Comparison Cards (Clean & easy to read on phones) -->
+        <div class="mobile-comparison-cards">
+          <div class="compare-card">
+            <div class="compare-card-header">
+              <span class="compare-tag">Time Phrasing</span>
+              <h4>Display Format</h4>
+            </div>
+            <div class="compare-vs">
+              <div class="vs-item bad">
+                <span class="vs-label">Ordinary Apps</span>
+                <p>"134 days remaining" (unintuitive mental math)</p>
+              </div>
+              <div class="vs-item good">
+                <span class="vs-label">✨ CountDown</span>
+                <p><strong>"4 months 12 days remaining"</strong></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="compare-card">
+            <div class="compare-card-header">
+              <span class="compare-tag">Accuracy</span>
+              <h4>Calendar Math</h4>
+            </div>
+            <div class="compare-vs">
+              <div class="vs-item bad">
+                <span class="vs-label">Ordinary Apps</span>
+                <p>Divide by 30 (drifts by multiple days over time)</p>
+              </div>
+              <div class="vs-item good">
+                <span class="vs-label">✨ CountDown</span>
+                <p><strong>True leap-year &amp; calendar month calculation</strong></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="compare-card">
+            <div class="compare-card-header">
+              <span class="compare-tag">Widgets &amp; UI</span>
+              <h4>Widgets &amp; Aesthetics</h4>
+            </div>
+            <div class="compare-vs">
+              <div class="vs-item bad">
+                <span class="vs-label">Ordinary Apps</span>
+                <p>Old legacy Android widgets, basic styling</p>
+              </div>
+              <div class="vs-item good">
+                <span class="vs-label">✨ CountDown</span>
+                <p><strong>Android Glance Material 3 home launcher widget</strong></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="compare-card">
+            <div class="compare-card-header">
+              <span class="compare-tag">Privacy &amp; Lean</span>
+              <h4>Experience &amp; Size</h4>
+            </div>
+            <div class="compare-vs">
+              <div class="vs-item bad">
+                <span class="vs-label">Ordinary Apps</span>
+                <p>30MB–50MB, ads, analytics, accounts required</p>
+              </div>
+              <div class="vs-item good">
+                <span class="vs-label">✨ CountDown</span>
+                <p><strong>1.9 MB APK, 100% Offline, Zero Ads, Zero Tracking</strong></p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -355,11 +510,30 @@
             </a>
           </div>
           
-          <p class="cta-note">Compatible with all Android devices running Android 7.0 (Nougat) and higher.</p>
+          <p class="cta-note">Compatible with all Android devices running Android 7.0 (Nougat) and higher &bull; 1.9 MB</p>
         </div>
       </div>
     </section>
   </main>
+
+  <!-- Sticky Dynamic Floating Bottom Bar (Appears on Mobile when scrolling) -->
+  <aside class="floating-mobile-bar" id="floating-mobile-bar" aria-label="Quick download bar">
+    <div class="floating-bar-inner">
+      <div class="floating-info">
+        <span class="floating-logo">⏳</span>
+        <div class="floating-meta">
+          <span class="floating-title">CountDown</span>
+          <span class="floating-sub">v1.0.0 &bull; 1.9 MB</span>
+        </div>
+      </div>
+      <a href="https://github.com/Dhanushpthampi/CountDownApp/releases/download/v1.0.0/CountDown-v1.0.0.apk" class="btn btn-primary btn-sm floating-btn" id="floating-download-btn">
+        <svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+        </svg>
+        <span>Install APK</span>
+      </a>
+    </div>
+  </aside>
 
   <!-- Footer -->
   <footer class="footer">
@@ -378,19 +552,20 @@
           <a href="#hero">Top</a>
           <a href="#interactive-demo">Live Demo</a>
           <a href="#screenshots">Screenshots</a>
+          <a href="#comparison">Comparison</a>
           <a href="#features">Features</a>
         </div>
         <div class="link-group">
           <h4>Open Source</h4>
           <a href="https://github.com/Dhanushpthampi/CountDownApp" target="_blank" rel="noopener noreferrer">GitHub Repo</a>
-          <a href="https://github.com/Dhanushpthampi/CountDownApp/releases" target="_blank" rel="noopener noreferrer">All Releases</a>
+          <a href="https://github.com/Dhanushpthampi/CountDownApp/releases" target="_blank" rel="noopener noreferrer">Release v1.0.0</a>
           <a href="https://github.com/Dhanushpthampi/CountDownApp/issues" target="_blank" rel="noopener noreferrer">Report Issue</a>
         </div>
       </div>
     </div>
     
     <div class="footer-bottom">
-      <p>&copy; 2026 CountDown App by <a href="https://github.com/Dhanushpthampi" target="_blank" rel="noopener noreferrer">Dhanush (RedGravity)</a>. Open source under MIT / Apache 2.0.</p>
+      <p>&copy; 2026 CountDown App by <a href="https://github.com/Dhanushpthampi" target="_blank" rel="noopener noreferrer">Dhanush (RedGravity)</a>. Open source under Apache 2.0.</p>
     </div>
   </footer>
 
