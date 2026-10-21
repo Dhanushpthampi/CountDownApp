@@ -6,6 +6,15 @@ A clean, Material You Android app that counts down to your most important events
 
 ---
 
+## 📸 Screenshots
+
+| Home Screen | All Card Styles | Detail View |
+|:---:|:---:|:---:|
+| ![Home screen showing a single countdown card](screenshots/screenshot0.jpeg) | ![Home screen showing multiple card styles](screenshots/screenshot1.jpeg) | ![Countdown detail sheet with progress ring](screenshots/screenshot2.jpeg) |
+| Category filter chips + countdown cards | Progress bar, compact, standard & circle cards | Progress ring · live clock · breakdown |
+
+---
+
 ## ✨ Features at a Glance
 
 | Feature | Description |
