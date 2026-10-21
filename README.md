@@ -1,8 +1,14 @@
 # ⏳ CountDown — Elegant Event Countdown App
 
+[![Release](https://img.shields.io/github/v/release/Dhanushpthampi/CountDownApp?style=for-the-badge&logo=github&color=6750A4)](https://github.com/Dhanushpthampi/CountDownApp/releases/latest)
+[![Download APK](https://img.shields.io/badge/Download-APK%20(v1.0.0)-388E3C?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Dhanushpthampi/CountDownApp/releases/download/v1.0.0/CountDown-v1.0.0.apk)
+[![Android](https://img.shields.io/badge/Android-7.0%2B-blue?style=for-the-badge&logo=android)](https://github.com/Dhanushpthampi/CountDownApp)
+
 > Track what matters. Know exactly how far away.
 
 A clean, Material You Android app that counts down to your most important events, milestones, and goals — displayed in **human-readable time** like *"4 months 10 days remaining"* rather than raw day totals.
+
+📥 **[Download Latest APK (v1.0.0)](https://github.com/Dhanushpthampi/CountDownApp/releases/download/v1.0.0/CountDown-v1.0.0.apk)** directly to your Android device. No build required!
 
 ---
 
