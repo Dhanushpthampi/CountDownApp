@@ -107,55 +107,23 @@ private fun StandardLayout(item: CountdownItem, remaining: CountdownTimeRemainin
         if (remaining.isFinished) {
             ArrivedBadge()
         } else {
-            // Smart time display: days + hms breakdown
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                TimeBox(
-                    value = remaining.smartValue.toString(),
-                    label = remaining.smartUnit,
-                    modifier = Modifier.weight(1f),
-                    isPrimary = true
-                )
-                if (remaining.totalYears < 1 && remaining.totalMonths < 1) {
-                    TimeBox(
-                        value = remaining.formattedHours,
-                        label = "hrs",
-                        modifier = Modifier.weight(1f)
-                    )
-                    TimeBox(
-                        value = remaining.formattedMinutes,
-                        label = "min",
-                        modifier = Modifier.weight(1f)
-                    )
-                    TimeBox(
-                        value = remaining.formattedSeconds,
-                        label = "sec",
-                        modifier = Modifier.weight(1f)
-                    )
-                } else if (remaining.totalYears >= 1) {
-                    TimeBox(
-                        value = remaining.totalMonths.toString(),
-                        label = "months total",
-                        modifier = Modifier.weight(1f)
-                    )
-                    TimeBox(
-                        value = remaining.totalDays.toString(),
-                        label = "days total",
-                        modifier = Modifier.weight(1f)
-                    )
-                } else {
-                    TimeBox(
-                        value = remaining.totalDays.toString(),
-                        label = "days total",
-                        modifier = Modifier.weight(1f)
-                    )
-                    TimeBox(
-                        value = remaining.formattedHours,
-                        label = "hrs",
-                        modifier = Modifier.weight(1f)
-                    )
+            // Primary readable countdown summary
+            Text(
+                text = remaining.readableRemaining,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            // Sub-row: hrs / min / sec when under a month
+            if (remaining.calYears < 1 && remaining.calMonths < 1) {
+                Spacer(Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    TimeBox(value = remaining.formattedHours, label = "hrs", modifier = Modifier.weight(1f))
+                    TimeBox(value = remaining.formattedMinutes, label = "min", modifier = Modifier.weight(1f))
+                    TimeBox(value = remaining.formattedSeconds, label = "sec", modifier = Modifier.weight(1f))
                 }
             }
         }
@@ -213,13 +181,13 @@ private fun CompactLayout(item: CountdownItem, remaining: CountdownTimeRemaining
                 )
             } else {
                 Text(
-                    text = remaining.smartValue.toString(),
+                    text = remaining.shortReadable,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = remaining.smartUnit,
+                    text = "remaining",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -248,21 +216,12 @@ private fun ProgressBarLayout(item: CountdownItem, remaining: CountdownTimeRemai
         if (remaining.isFinished) {
             ArrivedBadge()
         } else {
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    text = remaining.smartValue.toString(),
-                    style = MaterialTheme.typography.displaySmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    text = remaining.smartUnit + " left",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 6.dp)
-                )
-            }
+            Text(
+                text = remaining.readableRemaining,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
 
             if (remaining.hasProgress) {
                 Spacer(Modifier.height(12.dp))
@@ -385,7 +344,7 @@ private fun ProgressCircleLayout(item: CountdownItem, remaining: CountdownTimeRe
                 )
             } else {
                 Text(
-                    text = remaining.shortSummary + " remaining",
+                    text = remaining.readableRemaining,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

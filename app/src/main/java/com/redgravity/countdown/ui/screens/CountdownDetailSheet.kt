@@ -186,17 +186,13 @@ fun CountdownDetailSheet(
                                 textAlign = TextAlign.Center
                             )
                         } else {
-                            // No progress ring, just big numbers
+                            // No progress ring, just readable text
                             Text(
-                                text = remaining.smartValue.toString(),
-                                style = MaterialTheme.typography.displayLarge,
+                                text = remaining.readableRemaining,
+                                style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = remaining.smartUnit + " remaining",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.primary,
+                                textAlign = TextAlign.Center
                             )
                         }
 
@@ -242,6 +238,13 @@ fun CountdownDetailSheet(
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = remaining.readableRemaining,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold
                 )
                 Spacer(Modifier.height(8.dp))
                 Row(

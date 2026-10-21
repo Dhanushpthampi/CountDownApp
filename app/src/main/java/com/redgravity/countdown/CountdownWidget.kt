@@ -144,23 +144,13 @@ class CountdownWidget : GlanceAppWidget() {
                                 )
                             )
                         } else {
-                            Row(verticalAlignment = Alignment.Bottom) {
-                                Text(
-                                    text = remaining.smartValue.toString(),
-                                    style = TextStyle(
-                                        color = ColorProvider(primaryColor),
-                                        fontSize = 40.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                )
-                                Spacer(GlanceModifier.width(6.dp))
-                                Column {
+                            Column {
                                     Spacer(GlanceModifier.height(8.dp))
                                     Text(
-                                        text = remaining.smartUnit,
+                                        text = remaining.shortReadable,
                                         style = TextStyle(
-                                            color = ColorProvider(Color.White),
-                                            fontSize = 14.sp,
+                                            color = ColorProvider(primaryColor),
+                                            fontSize = 30.sp,
                                             fontWeight = FontWeight.Bold
                                         )
                                     )
@@ -172,7 +162,6 @@ class CountdownWidget : GlanceAppWidget() {
                                         )
                                     )
                                 }
-                            }
                         }
 
                         Spacer(GlanceModifier.height(4.dp))

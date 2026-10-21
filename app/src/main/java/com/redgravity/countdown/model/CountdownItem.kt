@@ -1,5 +1,6 @@
 package com.redgravity.countdown.model
 
+import java.util.Calendar
 import java.util.UUID
 
 data class CountdownItem(
@@ -20,17 +21,56 @@ data class CountdownItem(
         val positiveRemaining = remainingMillis.coerceAtLeast(0L)
 
         val totalSeconds = positiveRemaining / 1000L
-        val days = positiveRemaining / (1000L * 60 * 60 * 24)
+        val totalDays = positiveRemaining / (1000L * 60 * 60 * 24)
         val hours = (positiveRemaining / (1000L * 60 * 60)) % 24
         val minutes = (positiveRemaining / (1000L * 60)) % 60
         val seconds = (positiveRemaining / 1000L) % 60
+        val totalWeeks = totalDays / 7
 
-        val totalDays = days
-        val totalWeeks = days / 7
+        // Accurate calendar-based month/year/remaining-days calculation
+        val nowCal = Calendar.getInstance().apply { timeInMillis = currentTimeMillis }
+        val targetCal = Calendar.getInstance().apply { timeInMillis = targetEpochMillis }
 
-        // Calculate months and years remaining
-        val months = totalDays / 30
-        val years = totalDays / 365
+        var calYears = 0L
+        var calMonths = 0L
+        var calRemDays = 0L
+
+        if (!isFinished) {
+            // Count full years
+            val y = (targetCal.get(Calendar.YEAR) - nowCal.get(Calendar.YEAR)).toLong()
+            val tempAfterYears = Calendar.getInstance().apply {
+                timeInMillis = currentTimeMillis
+                add(Calendar.YEAR, y.toInt())
+            }
+            val effectiveYears = if (tempAfterYears.timeInMillis > targetEpochMillis) y - 1 else y
+            calYears = effectiveYears.coerceAtLeast(0L)
+
+            // Advance by years, then count full months
+            val afterYearsCal = Calendar.getInstance().apply {
+                timeInMillis = currentTimeMillis
+                add(Calendar.YEAR, calYears.toInt())
+            }
+            var m = 0L
+            val tempMonth = Calendar.getInstance().apply { timeInMillis = afterYearsCal.timeInMillis }
+            while (true) {
+                tempMonth.add(Calendar.MONTH, 1)
+                if (tempMonth.timeInMillis > targetEpochMillis) break
+                m++
+            }
+            calMonths = m
+
+            // Advance by months, remaining = days leftover
+            val afterMonthsCal = Calendar.getInstance().apply {
+                timeInMillis = afterYearsCal.timeInMillis
+                add(Calendar.MONTH, calMonths.toInt())
+            }
+            calRemDays = ((targetEpochMillis - afterMonthsCal.timeInMillis) / (1000L * 60 * 60 * 24))
+                .coerceAtLeast(0L)
+        }
+
+        // totalMonths = calYears*12 + calMonths (approximate, kept for backward compat)
+        val totalMonths = calYears * 12 + calMonths
+        val totalYears = calYears
 
         // Progress: use startEpochMillis if set, otherwise use createdEpochMillis
         val spanStart = startEpochMillis ?: createdEpochMillis
@@ -42,15 +82,18 @@ data class CountdownItem(
             else (elapsed.toFloat() / totalSpan.toFloat()).coerceIn(0.0f, 1.0f)
 
         return CountdownTimeRemaining(
-            days = days,
+            days = totalDays,
             hours = hours,
             minutes = minutes,
             seconds = seconds,
             totalSeconds = totalSeconds,
             totalDays = totalDays,
             totalWeeks = totalWeeks,
-            totalMonths = months,
-            totalYears = years,
+            totalMonths = totalMonths,
+            totalYears = totalYears,
+            calYears = calYears,
+            calMonths = calMonths,
+            calRemDays = calRemDays,
             isFinished = isFinished,
             progressRatio = progress,
             hasProgress = hasProgress
