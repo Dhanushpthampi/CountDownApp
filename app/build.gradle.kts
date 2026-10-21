@@ -57,6 +57,9 @@ android {
     buildFeatures {
         compose = true
     }
+    base {
+        archivesName.set("Chronos")
+    }
 }
 
 dependencies {

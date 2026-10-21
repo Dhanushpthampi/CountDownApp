@@ -1,5 +1,5 @@
 /**
- * CountDown Landing Page — Interactive Simulation & Dynamic Features
+ * Chronos Landing Page — Interactive Simulation & Dynamic Features
  * Fully responsive logic, calendar-accurate breakdown, custom builder, and mobile UI controls.
  */
 
